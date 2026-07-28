@@ -182,7 +182,7 @@ curl -s http://localhost:11434/api/chat
 If this command throws an OOM error, remove the "num_ctx": 16384 option line to fall back to safe default context limits).
 ### 2. Image Pre-processing Optimization Test
 
-Why: Passing raw high-resolution (12MP+) images directly into a local VLM creates a massive compute graph (~1.78 GB allocation).\ Downscaling photos to a maximum dimension of 512px reduces the allocation to <150 MB, speeding up processing significantly.
+Why: Passing raw high-resolution (12MP+) images directly into a local VLM creates a massive compute graph (~1.78 GB allocation).Downscaling photos to a maximum dimension of 512px reduces the allocation to <150 MB, speeding up processing significantly.
 
 Downscale a test image using Python PIL:
 ```
@@ -210,7 +210,8 @@ Ensure your files are organized in your project directory (~/orin-plant-id):
 
 ### 2. Configure FastAPI as an Auto-Restarting System Service
 
-Why: Running Uvicorn manually in a terminal causes app downtime whenever SSH disconnects.\ Setting up plantid.service with Restart=always ensures FastAPI runs continuously in the background and recovers instantly from unhandled exceptions.
+Why: Running Uvicorn manually in a terminal causes app downtime whenever SSH disconnects. 
+Setting up plantid.service with Restart=always ensures FastAPI runs continuously in the background and recovers instantly from unhandled exceptions.
 
 Create the systemd file:
 ```
@@ -242,7 +243,7 @@ sudo systemctl start plantid
 ### 3. Caddy Reverse Proxy Configuration
 
 Configure /etc/caddy/Caddyfile to enable path-stripping, extended proxy timeouts, and SSL termination:\
-YOUR_DOMAIN.servebeer.com 
+YOUR_DOMAIN.servebeer.com\ 
     # 1. Route traffic for the Plant ID app (strips /plantid prefix internally)
 ```
     handle_path /plantid* {
@@ -252,7 +253,9 @@ YOUR_DOMAIN.servebeer.com
             }
         }
     }
+```
     # 2. Fallback route for static file browser
+```
     handle {
         root * /var/www/html
         file_server browse
@@ -268,8 +271,8 @@ sudo systemctl restart caddy
 ```
 
 ## 📱 Mobile Installation (PWA)
-### 1. Open https://YOUR_DOMAIN.servebeer.com/plantid on a mobile browser using cellular data or an external network.
-### 2. iOS Safari: Tap Share $\rightarrow$ Add to Home Screen.
-### 3. Android Chrome: Tap Menu (⋮) $\rightarrow$ Install app or Add to Home Screen.
+#### 1. Open https://YOUR_DOMAIN.servebeer.com/plantid on a mobile browser using cellular data or an external network.
+#### 2. iOS Safari: Tap Share $\rightarrow$ Add to Home Screen.
+#i### 3. Android Chrome: Tap Menu (⋮) $\rightarrow$ Install app or Add to Home Screen.
 
-### 📄 LicenseDistributed under the MIT License.
+#### 📄 LicenseDistributed under the MIT License.
