@@ -5,20 +5,20 @@ An end-to-end, locally hosted Progressive Web Application (PWA) running on an **
 ---
 
 ## 🛠️ Architecture Overview
-[ Mobile Phone (iOS/Android PWA) ]
+Mobile Phone (iOS/Android PWA) 
 │
 ▼ (HTTPS / Port 443)
-[ Caddy Reverse Proxy ]
+Caddy Reverse Proxy 
 │
 (Subpath Route: /plantid*)
 │
 ▼ (HTTP / Port 8000)
-[ FastAPI Backend Engine ] ──► (Auto-restarting systemd service)
+FastAPI Backend Engine  ──► (Auto-restarting systemd service)
 │
 (Base64 Payload / Port 11434)
 │
 ▼
-[ Ollama: qwen2.5vl:3b-lowmem ] ──► (NVIDIA CUDA / Orin VRAM & NVMe Swap)
+Ollama: qwen2.5vl:3b-lowmem  ──► (NVIDIA CUDA / Orin VRAM & NVMe Swap)
 ---
 
 ## ✨ Key Features & Optimizations
@@ -59,7 +59,8 @@ Running AI on an 8GB Jetson Orin Nano requires selecting models whose visual and
 ```bash
 ssh username@jetson-ip-address
 curl -fsSL [https://ollama.com/install.sh](https://ollama.com/install.sh) | sh
-2. Configure 16GB NVMe Swapfile & Tune Swappiness
+
+### 2. Configure 16GB NVMe Swapfile & Tune Swappiness
 
     Why: On an 8GB Jetson Orin Nano, the operating system and system services consume ~2GB of RAM, leaving only ~6GB for AI models. A 16GB NVMe swapfile prevents Out-Of-Memory (OOM) crashes during model swaps. Setting swappiness=10 prevents Ubuntu from thrashing the SSD, avoiding disk-I/O locks that freeze the board over multiple days.
 
@@ -74,7 +75,7 @@ echo '/var/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
 Set swappiness to 10 for multi-day stability:
 sudo sysctl vm.swappiness=10
 echo "vm.swappiness=10" | sudo tee -a /etc/sysctl.conf
-3. Optimize Ollama Systemd Override & Keep-Alive Policy
+### 3. Optimize Ollama Systemd Override & Keep-Alive Policy
 
     Why: We limit model instances to 1, enable 8-bit KV caching (q8_0), allow dynamic CUDA VRAM spilling, and auto-restart on crashes. Crucially, OLLAMA_KEEP_ALIVE=5m unloads the model from VRAM after 5 minutes of inactivity so the OS isn't choked 24/7.
 
@@ -94,21 +95,21 @@ EOF_OLLAMA
 Apply changes and restart the Ollama background daemon:
 sudo systemctl daemon-reload
 sudo systemctl restart ollama
-📥 Model Installation & Custom Modelfile Build
-1. Pull Base Models
+## 📥 Model Installation & Custom Modelfile Build
+### 1. Pull Base Models
 
     Note: The ollama pull command is strictly a network and disk-write operation. It downloads model weights directly to your storage without filling active RAM.
-# Pull the 2B text/agent model
+#### Pull the 2B text/agent model
 ollama pull qwen3.5:2b
 
-# Pull the 3B Vision-Language model (avoiding the default 7B tag which overwhelms 8GB devices)
+#### Pull the 3B Vision-Language model (avoiding the default 7B tag which overwhelms 8GB devices)
 ollama pull qwen2.5vl:3b
-# Pull the 2B text/agent model
+#### Pull the 2B text/agent model
 ollama pull qwen3.5:2b
 
-# Pull the 3B Vision-Language model (avoiding the default 7B tag which overwhelms 8GB devices)
+#### Pull the 3B Vision-Language model (avoiding the default 7B tag which overwhelms 8GB devices)
 ollama pull qwen2.5vl:3b
-2. Create the Low-Memory VLM Variant (qwen2.5vl:3b-lowmem)
+### 2. Create the Low-Memory VLM Variant (qwen2.5vl:3b-lowmem)
 
     Why: By default, Vision Models attempt to reserve massive context windows (64K+ tokens) in RAM. For plant identification, we only need ~2048 tokens. Capping num_ctx reduces VRAM consumption dramatically.
 
@@ -116,8 +117,8 @@ Create a custom Modelfile:
 echo -e "FROM qwen2.5vl:3b\nPARAMETER num_ctx 2048" > ~/Modelfile.vlm
 Build the optimized local variant:
 ollama create qwen2.5vl:3b-lowmem -f ~/Modelfile.vlm
-🧪 Verification & Hardware Testing
-1. Test Function Calling on qwen3.5:2b
+## 🧪 Verification & Hardware Testing
+### 1. Test Function Calling on qwen3.5:2b
 
 Verify that tool calling works properly without running out of memory:
 curl -s http://localhost:11434/api/chat \
@@ -143,7 +144,7 @@ curl -s http://localhost:11434/api/chat \
     }]
   }'
 If this command throws an OOM error, remove the "num_ctx": 16384 option line to fall back to safe default context limits).
-2. Image Pre-processing Optimization Test
+### 2. Image Pre-processing Optimization Test
 
     Why: Passing raw high-resolution (12MP+) images directly into a local VLM creates a massive compute graph (~1.78 GB allocation). Downscaling photos to a maximum dimension of 512px reduces the allocation to <150 MB, speeding up processing significantly.
 
@@ -153,8 +154,8 @@ Run a CLI test with the low-memory VLM:
 ollama run qwen2.5vl:3b-lowmem
 >>> Identify this plant and tell me its botanical name: /path/to/test_plant_512.jpg
 >>> /exit
-🚀 Application Server & Reverse Proxy Setup
-1. Repository File Structure
+## 🚀 Application Server & Reverse Proxy Setup
+### 1. Repository File Structure
 
 Ensure your files are organized in your project directory (~/orin-plant-id):
 .
@@ -166,7 +167,7 @@ Ensure your files are organized in your project directory (~/orin-plant-id):
 │   └── icon.png           # App launch icon (512x512)
 ├── .gitignore             # Git ignore file for secrets and environments
 └── README.md              # Documentation
-2. Configure FastAPI as an Auto-Restarting System Service
+### 2. Configure FastAPI as an Auto-Restarting System Service
 
     Why: Running Uvicorn manually in a terminal causes app downtime whenever SSH disconnects. Setting up plantid.service with Restart=always ensures FastAPI runs continuously in the background and recovers instantly from unhandled exceptions.
 
@@ -194,7 +195,7 @@ Enable and start the service:
 sudo systemctl daemon-reload
 sudo systemctl enable plantid
 sudo systemctl start plantid
-3. Caddy Reverse Proxy Configuration
+### 3. Caddy Reverse Proxy Configuration
 
 Configure /etc/caddy/Caddyfile to enable path-stripping, extended proxy timeouts, and SSL termination:
 YOUR_DOMAIN.servebeer.com {
@@ -221,9 +222,9 @@ sudo caddy validate --config /etc/caddy/Caddyfile
 sudo systemctl restart caddy
 
 
-📱 Mobile Installation (PWA)
-1. Open https://YOUR_DOMAIN.servebeer.com/plantid on a mobile browser using cellular data or an external network.
-2. iOS Safari: Tap Share $\rightarrow$ Add to Home Screen.
-3. Android Chrome: Tap Menu (⋮) $\rightarrow$ Install app or Add to Home Screen.
+## 📱 Mobile Installation (PWA)
+### 1. Open https://YOUR_DOMAIN.servebeer.com/plantid on a mobile browser using cellular data or an external network.
+### 2. iOS Safari: Tap Share $\rightarrow$ Add to Home Screen.
+### 3. Android Chrome: Tap Menu (⋮) $\rightarrow$ Install app or Add to Home Screen.
 
-📄 LicenseDistributed under the MIT License. See LICENSE for details.
+## 📄 LicenseDistributed under the MIT License. See LICENSE for details.
