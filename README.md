@@ -2,23 +2,33 @@
 
 An end-to-end, locally hosted Progressive Web Application (PWA) running on an **NVIDIA Jetson Orin Nano**. The system leverages a dual-agent local model architecture using **Ollama**, wrapped in a **FastAPI** backend, reverse-proxied by **Caddy** with automatic HTTPS, and delivered through a mobile-optimized frontend.
 
----
-
 ## 🛠️ Architecture Overview
-Mobile Phone (iOS/Android PWA) 
-│
-▼ (HTTPS / Port 443)
-Caddy Reverse Proxy 
-│
-(Subpath Route: /plantid*)
-│
-▼ (HTTP / Port 8000)
-FastAPI Backend Engine  ──► (Auto-restarting systemd service)
-│
-(Base64 Payload / Port 11434)
-│
-▼
-Ollama: qwen2.5vl:3b-lowmem  ──► (NVIDIA CUDA / Orin VRAM & NVMe Swap)
+---
+```text
+┌────────────────────────────────────────────────────────────────────────┐
+│                   📱 Mobile Phone (iOS / Android PWA)                 │
+└───────────────────────────────────┬────────────────────────────────────┘
+                                    │
+                                    │ HTTPS (Port 443)
+                                    ▼
+┌────────────────────────────────────────────────────────────────────────┐
+│                         🔒 Caddy Reverse Proxy                         │
+└───────────────────────────────────┬────────────────────────────────────┘
+                                    │
+                                    │ Subpath Route: /plantid*
+                                    ▼
+┌──────────────────────────────────────────────────┐   ┌─────────────────┐
+│             ⚡ FastAPI Backend Engine            │◄──┤ ⚙️ systemd      │
+│             Port 8000 (Loopback)                 │   │ (Auto-restart)  │
+└─────────────────────────┬────────────────────────┘   └─────────────────┘
+                          │
+                          │ Base64 Payload (Port 11434)
+                          ▼
+┌──────────────────────────────────────────────────┐   ┌─────────────────┐
+│            🧠 Ollama Inference Engine            │──►│ 🟢 NVIDIA CUDA  │
+│            Model: qwen2.5vl:3b-lowmem            │   │ Orin VRAM & Swap│
+└──────────────────────────────────────────────────┘   └─────────────────┘
+```
 ---
 
 ## ✨ Key Features & Optimizations
@@ -56,7 +66,7 @@ Running AI on an 8GB Jetson Orin Nano requires selecting models whose visual and
 ## ⚙️ Jetson Orin Nano System Setup
 
 ### 1. SSH into the Jetson & Install Ollama
-```bash
+
 ssh username@jetson-ip-address
 curl -fsSL [https://ollama.com/install.sh](https://ollama.com/install.sh) | sh
 
