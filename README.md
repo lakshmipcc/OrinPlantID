@@ -67,17 +67,19 @@ Running AI on an 8GB Jetson Orin Nano requires selecting models whose visual and
 
 ### 1. SSH into the Jetson & Install Ollama
 
-*ssh username@jetson-ip-address
-*curl -fsSL [https://ollama.com/install.sh](https://ollama.com/install.sh) | sh
+ssh username@jetson-ip-address\
+curl -fsSL [https://ollama.com/install.sh](https://ollama.com/install.sh) | sh
 
 ### 2. Configure 16GB NVMe Swapfile & Tune Swappiness
 
-*Why: On an 8GB Jetson Orin Nano, the operating system and system services consume ~2GB of RAM, leaving only ~6GB for AI models. A 16GB NVMe swapfile prevents Out-Of-Memory (OOM) crashes during model swaps. Setting swappiness=10 prevents Ubuntu from thrashing the SSD, avoiding disk-I/O locks that freeze the board over multiple days.
+Why: On an 8GB Jetson Orin Nano, the operating system and system services consume ~2GB of RAM, leaving only ~6GB for AI models.
+ A 16GB NVMe swapfile prevents Out-Of-Memory (OOM) crashes during model swaps.
+ Setting swappiness=10 prevents Ubuntu from thrashing the SSD, avoiding disk-I/O locks that freeze the board over multiple days.
 
-*Check your current swap memory:
-*free -h
-*If Swap is less than 8GB, allocate a 16GB swapfile on your NVMe storage:
-*sudo fallocate -l 16G /var/swapfile
+Check your current swap memory:
+free -h\
+If Swap is less than 8GB, allocate a 16GB swapfile on your NVMe storage:\
+sudo fallocate -l 16G /var/swapfile
 sudo chmod 600 /var/swapfile
 sudo mkswap /var/swapfile
 sudo swapon /var/swapfile
