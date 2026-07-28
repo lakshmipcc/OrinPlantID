@@ -67,7 +67,7 @@ Running AI on an 8GB Jetson Orin Nano requires selecting models whose visual and
 
 ### 1. SSH into the Jetson & Install Ollama
 ```
-ssh username@jetson-ip-address\
+ssh username@jetson-ip-address
 curl -fsSL [https://ollama.com/install.sh](https://ollama.com/install.sh) | sh
 ```
 ### 2. Configure 16GB NVMe Swapfile & Tune Swappiness
