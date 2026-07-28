@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Orin Plant ID</title>
+  <link rel="manifest" href="manifest.json">
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 text-white min-h-screen flex flex-col items-center justify-between p-4">
+
+  <header class="text-center my-4">
+    <h1 class="text-3xl font-extrabold text-emerald-400">Orin Plant ID</h1>
+    <p class="text-gray-400 text-sm">Powered by Qwen 2.5-VL</p>
+  </header>
+
+  <main class="w-full max-w-md bg-gray-800 rounded-2xl p-6 shadow-xl flex flex-col items-center gap-6">
+    <!-- Image Preview Area -->
+    <div id="preview-container" class="w-full h-64 bg-gray-700 rounded-lg flex items-center justify-center border-2 border-dashed border-gray-600 overflow-hidden">
+      <span id="placeholder-text" class="text-gray-400">No Image Selected</span>
+      <img id="preview-img" class="hidden w-full h-full object-cover">
+    </div>
+
+    <!-- Hidden canvas used for client-side downscaling -->
+    <canvas id="scale-canvas" class="hidden"></canvas>
+
+    <!-- Upload and Capture Inputs -->
+    <label class="w-full bg-emerald-600 hover:bg-emerald-500 text-center py-4 rounded-xl font-bold cursor-pointer transition">
+      📸 Take Photo / Upload
+      <input type="file" id="file-input" accept="image/*, android/force-camera-workaround"  class="hidden">
+    </label>
+
+    <!-- Response Display -->
+    <div id="loading" class="hidden text-emerald-400 animate-pulse font-bold">Analyzing plant on Jetson...</div>
+    <div id="output" class="w-full text-gray-300 text-sm whitespace-pre-wrap max-h-64 overflow-y-auto bg-gray-900 p-4 rounded-lg hidden"></div>
+  </main>
+
+  <footer class="text-xs text-gray-600 mb-2">Jetson Orin Nano Edge AI</footer>
+
+  <script>
+    // Register Service Worker for PWA
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js');
+    }
+
+    const fileInput = document.getElementById('file-input');
+    const previewImg = document.getElementById('preview-img');
+    const placeholderText = document.getElementById('placeholder-text');
+    const outputDiv = document.getElementById('output');
+    const loadingDiv = document.getElementById('loading');
+    const canvas = document.getElementById('scale-canvas');
+
+    fileInput.addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      // Show preview
+      previewImg.src = URL.createObjectURL(file);
+      previewImg.classList.remove('hidden');
+      placeholderText.classList.add('hidden');
+      outputDiv.classList.add('hidden');
+      loadingDiv.classList.remove('hidden');
+
+      // 1. Client-Side Downscale to Max 512px using HTML5 Canvas
+      const img = new Image();
+      img.src = URL.createObjectURL(file);
+      img.onload = () => {
+        let width = img.width;
+        let height = img.height;
+        const max_size = 512;
+
+        if (width > height) {
+          if (width > max_size) {
+            height *= max_size / width;
+            width = max_size;
+          }
+        } else {
+          if (height > max_size) {
+            width *= max_size / height;
+            height = max_size;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+
+        // 2. Convert Canvas to Blob & POST to local server
+        canvas.toBlob(async (blob) => {
+          const formData = new FormData();
+          formData.append('file', blob, 'image.jpg');
+
+          try {
+            // Replace with your Cloudflare Tunnel / Local LAN HTTPS URL
+            const response = await fetch('/plantid/identify', {
+              method: 'POST',
+              body: formData
+            });
+            const data = await response.json();
+            
+            loadingDiv.classList.add('hidden');
+            outputDiv.innerText = data.response;
+            outputDiv.classList.remove('hidden');
+          } catch (err) {
+            loadingDiv.classList.add('hidden');
+            outputDiv.innerText = "Error contacting Jetson: " + err.message;
+            outputDiv.classList.remove('hidden');
+          }
+        }, 'image/jpeg', 0.85); // High quality, low file size
+      };
+    });
+  </script>
+</body>
+</html>
