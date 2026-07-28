@@ -168,7 +168,7 @@ ollama run qwen2.5vl:3b-lowmem
 ### 1. Repository File Structure
 
 Ensure your files are organized in your project directory (~/orin-plant-id):
-.
+```text 
 ├── server.py              # FastAPI application with disconnect exception handling
 ├── public/
 │   ├── index.html         # Mobile PWA user interface
@@ -177,6 +177,8 @@ Ensure your files are organized in your project directory (~/orin-plant-id):
 │   └── icon.png           # App launch icon (512x512)
 ├── .gitignore             # Git ignore file for secrets and environments
 └── README.md              # Documentation
+```
+
 ### 2. Configure FastAPI as an Auto-Restarting System Service
 
     Why: Running Uvicorn manually in a terminal causes app downtime whenever SSH disconnects. Setting up plantid.service with Restart=always ensures FastAPI runs continuously in the background and recovers instantly from unhandled exceptions.
