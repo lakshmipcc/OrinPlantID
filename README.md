@@ -141,7 +141,7 @@ ollama pull qwen2.5vl:3b
 `
 ### 2. Create the Low-Memory VLM Variant (qwen2.5vl:3b-lowmem)
 
-Why: By default, Vision Models attempt to reserve massive context windows (64K+ tokens) in RAM.\ For plant identification, we only need ~2048 tokens.\ Capping num_ctx reduces VRAM consumption dramatically.
+Why: By default, Vision Models attempt to reserve massive context windows (64K+ tokens) in RAM. For plant identification, we only need ~2048 tokens.Capping num_ctx reduces VRAM consumption dramatically.
 
 Create a custom Modelfile:
 ```
@@ -273,6 +273,6 @@ sudo systemctl restart caddy
 ## 📱 Mobile Installation (PWA)
 #### 1. Open https://YOUR_DOMAIN.servebeer.com/plantid on a mobile browser using cellular data or an external network.
 #### 2. iOS Safari: Tap Share $\rightarrow$ Add to Home Screen.
-#i### 3. Android Chrome: Tap Menu (⋮) $\rightarrow$ Install app or Add to Home Screen.
+#### 3. Android Chrome: Tap Menu (⋮) $\rightarrow$ Install app or Add to Home Screen.
 
 #### 📄 LicenseDistributed under the MIT License.
