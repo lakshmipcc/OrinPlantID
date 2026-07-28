@@ -212,7 +212,7 @@ sudo systemctl start plantid\
 ### 3. Caddy Reverse Proxy Configuration
 
 Configure /etc/caddy/Caddyfile to enable path-stripping, extended proxy timeouts, and SSL termination:\
-YOUR_DOMAIN.servebeer.com {\
+YOUR_DOMAIN.servebeer.com \
     # 1. Route traffic for the Plant ID app (strips /plantid prefix internally)\
     handle_path /plantid* {\
         reverse_proxy localhost:8000 {\
@@ -226,7 +226,6 @@ YOUR_DOMAIN.servebeer.com {\
         root * /var/www/html\
         file_server browse\
     }\
-
     encode gzip zstd\
 }\
 Validate and restart Caddy:
