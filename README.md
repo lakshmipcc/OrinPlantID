@@ -86,10 +86,10 @@ sudo swapon /var/swapfile\
 echo '/var/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab\
 Set swappiness to 10 for multi-day stability:\
 sudo sysctl vm.swappiness=10\
-echo "vm.swappiness=10" | sudo tee -a /etc/sysctl.conf\
+echo "vm.swappiness=10" | sudo tee -a /etc/sysctl.conf
 ### 3. Optimize Ollama Systemd Override & Keep-Alive Policy
 
-    Why: We limit model instances to 1, enable 8-bit KV caching (q8_0), allow dynamic CUDA VRAM spilling, and auto-restart on crashes.\ Crucially, OLLAMA_KEEP_ALIVE=5m unloads the model from VRAM after 5 minutes of inactivity so the OS isn't choked 24/7.
+Why: We limit model instances to 1, enable 8-bit KV caching (q8_0), allow dynamic CUDA VRAM spilling, and auto-restart on crashes.\ Crucially, OLLAMA_KEEP_ALIVE=5m unloads the model from VRAM after 5 minutes of inactivity so the OS isn't choked 24/7.
 
 Create and write the override configuration:\
 sudo mkdir -p /etc/systemd/system/ollama.service.d\
@@ -110,7 +110,7 @@ sudo systemctl restart ollama\
 ## 📥 Model Installation & Custom Modelfile Build
 ### 1. Pull Base Models
 
-    Note: The ollama pull command is strictly a network and disk-write operation.\ It downloads model weights directly to your storage without filling active RAM.\
+Note: The ollama pull command is strictly a network and disk-write operation.\ It downloads model weights directly to your storage without filling active RAM.\
 #### Pull the 2B text/agent model
 ollama pull qwen3.5:2b
 
@@ -123,7 +123,7 @@ ollama pull qwen3.5:2b
 ollama pull qwen2.5vl:3b
 ### 2. Create the Low-Memory VLM Variant (qwen2.5vl:3b-lowmem)
 
-    Why: By default, Vision Models attempt to reserve massive context windows (64K+ tokens) in RAM.\ For plant identification, we only need ~2048 tokens.\ Capping num_ctx reduces VRAM consumption dramatically.
+Why: By default, Vision Models attempt to reserve massive context windows (64K+ tokens) in RAM.\ For plant identification, we only need ~2048 tokens.\ Capping num_ctx reduces VRAM consumption dramatically.
 
 Create a custom Modelfile:\
 echo -e "FROM qwen2.5vl:3b\nPARAMETER num_ctx 2048" > ~/Modelfile.vlm\
@@ -155,17 +155,17 @@ curl -s http://localhost:11434/api/chat \
       }\
     }]\
   }'\
-If this command throws an OOM error, remove the "num_ctx": 16384 option line to fall back to safe default context limits).\
+If this command throws an OOM error, remove the "num_ctx": 16384 option line to fall back to safe default context limits).
 ### 2. Image Pre-processing Optimization Test
 
-    Why: Passing raw high-resolution (12MP+) images directly into a local VLM creates a massive compute graph (~1.78 GB allocation).\ Downscaling photos to a maximum dimension of 512px reduces the allocation to <150 MB, speeding up processing significantly.
+Why: Passing raw high-resolution (12MP+) images directly into a local VLM creates a massive compute graph (~1.78 GB allocation).\ Downscaling photos to a maximum dimension of 512px reduces the allocation to <150 MB, speeding up processing significantly.
 
 Downscale a test image using Python PIL:\
 python3 -c "from PIL import Image; img = Image.open('test_plant.jpg'); img.thumbnail((512, 512)); img.save('test_plant_512.jpg')"\
 Run a CLI test with the low-memory VLM:\
 ollama run qwen2.5vl:3b-lowmem\
 >>> Identify this plant and tell me its botanical name: /path/to/test_plant_512.jpg\
->>> /exit\
+>>> /exit
 ## 🚀 Application Server & Reverse Proxy Setup
 ### 1. Repository File Structure
 
@@ -183,7 +183,7 @@ Ensure your files are organized in your project directory (~/orin-plant-id):
 
 ### 2. Configure FastAPI as an Auto-Restarting System Service
 
-    Why: Running Uvicorn manually in a terminal causes app downtime whenever SSH disconnects.\ Setting up plantid.service with Restart=always ensures FastAPI runs continuously in the background and recovers instantly from unhandled exceptions.
+Why: Running Uvicorn manually in a terminal causes app downtime whenever SSH disconnects.\ Setting up plantid.service with Restart=always ensures FastAPI runs continuously in the background and recovers instantly from unhandled exceptions.
 
 Create the systemd file:\
 sudo tee /etc/systemd/system/plantid.service << 'EOF_SERVICE'\
@@ -220,20 +220,20 @@ YOUR_DOMAIN.servebeer.com {\
                 read_timeout 90s\
             }\
         }\
-    }\
+    }
 
     # 2. Fallback route for static file browser\
     handle {\
         root * /var/www/html\
         file_server browse\
     }\
-\
+
     encode gzip zstd\
 }\
-Validate and restart Caddy:\
+Validate and restart Caddy:
 
 sudo caddy validate --config /etc/caddy/Caddyfile\
-sudo systemctl restart caddy\
+sudo systemctl restart caddy
 
 
 ## 📱 Mobile Installation (PWA)
@@ -241,4 +241,4 @@ sudo systemctl restart caddy\
 ### 2. iOS Safari: Tap Share $\rightarrow$ Add to Home Screen.
 ### 3. Android Chrome: Tap Menu (⋮) $\rightarrow$ Install app or Add to Home Screen.
 
-## 📄 LicenseDistributed under the MIT License. See LICENSE for details.
+### 📄 LicenseDistributed under the MIT License.
